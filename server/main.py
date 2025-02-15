@@ -39,6 +39,7 @@ languages = {
     "fr": Language(code="fr", name="French", flag="🇫🇷"),
     "de": Language(code="de", name="German", flag="🇩🇪"),
     "ja": Language(code="ja", name="Japanese", flag="🇯🇵"),
+    "ru": Language(code="ru", name="Russian", flag="🇷🇺"),
 }
 
 LanguageCode = Enum(
@@ -58,7 +59,7 @@ class Translator:
                 f"Your only response should be the exact translation of input text in the {lang.value} language ."
             ),
         )
-        self.llm = openai.LLM()
+        self.llm = openai.LLM(model="gpt-4o-mini")
 
     async def translate(self, message: str, track: rtc.Track):
         self.context.append(text=message, role="user")
