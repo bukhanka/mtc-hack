@@ -8,6 +8,19 @@ export type State = {
   captionsEnabled: boolean;
   captionsLanguage: string;
   isHost: boolean;
+  ttsEnabled: boolean;
+  ttsVoiceId: string;
+};
+
+// Initial state with Russian as default
+export const initialState: State = {
+  serverUrl: "",
+  shouldConnect: false,
+  captionsEnabled: true,
+  captionsLanguage: "ru",
+  isHost: false,
+  ttsEnabled: false,
+  ttsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || "Png1rsLPwah87cs3JX7l", // Voice ID from env
 };
 
 // Action type
@@ -17,7 +30,9 @@ export type Action =
   | { type: "SET_SHOULD_CONNECT"; payload: boolean }
   | { type: "SET_CAPTIONS_ENABLED"; payload: boolean }
   | { type: "SET_CAPTIONS_LANGUAGE"; payload: string }
-  | { type: "SET_IS_HOST"; payload: boolean };
+  | { type: "SET_IS_HOST"; payload: boolean }
+  | { type: "SET_TTS_ENABLED"; payload: boolean }
+  | { type: "SET_TTS_VOICE_ID"; payload: string };
 
 // Reducer function
 export const reducer = (state: State, action: Action): State => {
@@ -34,6 +49,10 @@ export const reducer = (state: State, action: Action): State => {
       return { ...state, captionsLanguage: action.payload };
     case "SET_IS_HOST":
       return { ...state, isHost: action.payload };
+    case "SET_TTS_ENABLED":
+      return { ...state, ttsEnabled: action.payload };
+    case "SET_TTS_VOICE_ID":
+      return { ...state, ttsVoiceId: action.payload };
     default:
       // Ensure exhaustive check
       const _: never = action;
