@@ -3,3 +3,5 @@ livekit-plugins-openai
 python-dotenv
 livekit-plugins-deepgram
 livekit-plugins-silero
+livekit-plugins-google
+livekit-plugins-

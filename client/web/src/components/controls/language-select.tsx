@@ -40,7 +40,7 @@ const LanguageSelect = () => {
         captions_language: state.captionsLanguage,
       });
     }
-  }, [room.state]);
+  }, [room.state, room.localParticipant, state.captionsLanguage]);
 
   const handleChange = async (value: string) => {
     dispatch({

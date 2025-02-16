@@ -1,11 +1,6 @@
 import { useRoomContext } from "@livekit/components-react";
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  TranscriptionSegment,
-  RoomEvent,
-  TrackPublication,
-  Participant,
-} from "livekit-client";
+import { RoomEvent, Participant, TranscriptionSegment } from "livekit-client";
 import { usePartyState } from "@/hooks/usePartyState";
 import { SpeakerWaveIcon, SpeakerXMarkIcon, ClipboardIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
@@ -180,8 +175,7 @@ export default function Captions() {
   useEffect(() => {
     const updateTranscriptions = async (
       segments: TranscriptionSegment[],
-      participant?: Participant,
-      publication?: TrackPublication
+      participant?: Participant
     ) => {
       console.debug('[Debug] Transcription event received:', {
         time: new Date().toISOString(),
@@ -221,7 +215,8 @@ export default function Captions() {
         const processedSegments: { id: string; action: string; reason: string; text: string }[] = [];
 
         for (const segment of segments) {
-          let { language, id, text } = segment;
+          const { id, text } = segment;
+          let { language } = segment;
 
           if (language === "") {
             language = "en";
@@ -318,7 +313,7 @@ export default function Captions() {
     return () => {
       room.off(RoomEvent.TranscriptionReceived, updateTranscriptions);
     };
-  }, [room, state.ttsEnabled, state.captionsLanguage, playTTS, isPlaying]);
+  }, [room, state.ttsEnabled, state.captionsLanguage, playTTS, isPlaying, transcriptions]);
 
   const originalSegments = Object.values(transcriptions["en"] || {})
     .sort((a, b) => a.firstReceivedTime - b.firstReceivedTime)

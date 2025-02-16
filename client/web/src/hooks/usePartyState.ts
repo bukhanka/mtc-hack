@@ -10,6 +10,8 @@ export type State = {
   isHost: boolean;
   ttsEnabled: boolean;
   ttsVoiceId: string;
+  sttProvider: string;
+  inputLanguage: string;
 };
 
 // Initial state with Russian as default
@@ -21,6 +23,8 @@ export const initialState: State = {
   isHost: false,
   ttsEnabled: false,
   ttsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || "Png1rsLPwah87cs3JX7l", // Voice ID from env
+  sttProvider: "deepgram",
+  inputLanguage: "en",
 };
 
 // Action type
@@ -32,7 +36,9 @@ export type Action =
   | { type: "SET_CAPTIONS_LANGUAGE"; payload: string }
   | { type: "SET_IS_HOST"; payload: boolean }
   | { type: "SET_TTS_ENABLED"; payload: boolean }
-  | { type: "SET_TTS_VOICE_ID"; payload: string };
+  | { type: "SET_TTS_VOICE_ID"; payload: string }
+  | { type: "SET_STT_PROVIDER"; payload: string }
+  | { type: "SET_INPUT_LANGUAGE"; payload: string };
 
 // Reducer function
 export const reducer = (state: State, action: Action): State => {
@@ -53,9 +59,11 @@ export const reducer = (state: State, action: Action): State => {
       return { ...state, ttsEnabled: action.payload };
     case "SET_TTS_VOICE_ID":
       return { ...state, ttsVoiceId: action.payload };
+    case "SET_STT_PROVIDER":
+      return { ...state, sttProvider: action.payload };
+    case "SET_INPUT_LANGUAGE":
+      return { ...state, inputLanguage: action.payload };
     default:
-      // Ensure exhaustive check
-      const _: never = action;
       throw new Error(`Unknown action: ${JSON.stringify(action)}`);
   }
 };

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useReducer, use } from "react";
-import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { LiveKitRoom } from "@livekit/components-react";
+/* eslint-enable @typescript-eslint/no-unused-vars */
 import Party from "@/components/party";
 import Lobby from "@/components/lobby";
 import { State, reducer, PartyStateContext, Action } from "@/hooks/usePartyState";
@@ -22,7 +24,9 @@ const initialState: State = {
   captionsLanguage: "ru",
   isHost: false,
   ttsEnabled: false,
-  ttsVoiceId: "21m00Tcm4TlvDq8ikWAM", // Default voice ID (Rachel)
+  ttsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || "Png1rsLPwah87cs3JX7l",
+  sttProvider: "gpt-4o",
+  inputLanguage: "en",
 };
 
 // PartyPage component

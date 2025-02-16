@@ -10,7 +10,6 @@ from livekit import rtc
 from livekit.agents import (
     AutoSubscribe,
     JobContext,
-    JobProcess,
     JobRequest,
     WorkerOptions,
     cli,
@@ -19,7 +18,7 @@ from livekit.agents import (
     transcription,
     utils,
 )
-from livekit.plugins import openai, silero, deepgram, elevenlabs
+from livekit.plugins import openai, deepgram
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,15 +36,16 @@ class Language:
     code: str
     name: str
     flag: str
+    supported_stt: list[str]  # List of STT providers that support this language
 
 
 languages = {
-    "en": Language(code="en", name="English", flag="🇺🇸"),
-    "es": Language(code="es", name="Spanish", flag="🇪🇸"),
-    "fr": Language(code="fr", name="French", flag="🇫🇷"),
-    "de": Language(code="de", name="German", flag="🇩🇪"),
-    "ja": Language(code="ja", name="Japanese", flag="🇯🇵"),
-    "ru": Language(code="ru", name="Russian", flag="🇷🇺"),
+    "en": Language(code="en", name="English", flag="🇺🇸", supported_stt=["deepgram"]),
+    "es": Language(code="es", name="Spanish", flag="🇪🇸", supported_stt=["deepgram"]),
+    "fr": Language(code="fr", name="French", flag="🇫🇷", supported_stt=["deepgram"]),
+    "de": Language(code="de", name="German", flag="🇩🇪", supported_stt=["deepgram"]),
+    "ja": Language(code="ja", name="Japanese", flag="🇯🇵", supported_stt=["deepgram"]),
+    "ru": Language(code="ru", name="Russian", flag="🇷🇺", supported_stt=["deepgram"]),
 }
 
 LanguageCode = Enum(
@@ -66,54 +66,10 @@ class Translator:
                 f"Your only response should be the exact translation of input text in the {lang.value} language."
             ),
         )
-        from livekit.plugins import openai
-
         self.llm = openai.LLM(
-            # model="llama3.3-70b",
-            # api_key=os.getenv("CEREBRAS_API_KEY"),
             model="gpt-4o-mini",
-            # model='gemini-1.5-flash',
-            # base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            # api_key=os.getenv("GEMINI_API_KEY"),
-            # base_url="https://api.cerebras.ai/v1",
             temperature=0.3,
         )
-        
-        # Comment out TTS-related initialization
-        # self.audio_source = rtc.AudioSource(44100, 1)
-        # self.audio_track = None
-        # self._is_track_published = False
-        # track_name = f"tts-{self.lang.name}"
-        # self.audio_track = rtc.LocalAudioTrack.create_audio_track(track_name, self.audio_source)
-        
-        # Comment out TTS initialization
-        # try:
-        #     self.tts = elevenlabs.TTS(
-        #         voice=elevenlabs.Voice(
-        #             id="tOo2BJ74frmnPadsDNIi",
-        #             name="Bella",
-        #             category="premade",
-        #             settings=elevenlabs.VoiceSettings(
-        #                 stability=0.18,
-        #                 similarity_boost=0.14,
-        #                 style=0.0,
-        #                 use_speaker_boost=True
-        #             )
-        #         ),
-        #         language="ru",
-        #         model="eleven_flash_v2_5"
-        #     )
-        #     self.tts_stream = self.tts.stream()
-        # except Exception as e:
-        #     logger.error(f"Failed to initialize TTS: {e}", exc_info=True)
-        #     raise
-
-    # Comment out TTS-related methods
-    # async def setup_tts_track(self):
-    #     pass
-
-    # async def send_audio(self):
-    #     pass
 
     async def translate(self, message: str, track: rtc.Track):
         try:
@@ -148,15 +104,12 @@ class Translator:
 
     async def cleanup(self):
         """Cleanup resources"""
-        pass  # TTS cleanup removed
-
-
-def prewarm(proc: JobProcess):
-    proc.userdata["vad"] = silero.VAD.load()
+        pass
 
 
 async def entrypoint(job: JobContext):
-    stt_provider = deepgram.STT()
+    # Use Deepgram STT with English as default
+    stt_provider = deepgram.STT(language="en")
     tasks = []
     translators = {}
 
@@ -176,7 +129,7 @@ async def entrypoint(job: JobContext):
                 print(" -> ", ev.alternatives[0].text)
 
                 message = ev.alternatives[0].text
-                # Send original English transcription
+                # Send original transcription in input language
                 segment = rtc.TranscriptionSegment(
                     id=utils.misc.shortuuid("SG_"),
                     text=message,
@@ -190,9 +143,9 @@ async def entrypoint(job: JobContext):
                 )
                 await job.room.local_participant.publish_transcription(transcription)
 
-                # Send translations for other languages (excluding English)
+                # Send translations for other languages (excluding input language)
                 for lang, translator in translators.items():
-                    if lang != "en":  # Skip English translation since we already sent it
+                    if lang != "en":  # Skip translation for input language
                         asyncio.create_task(translator.translate(message, track))
 
     async def transcribe_track(participant: rtc.RemoteParticipant, track: rtc.Track):
@@ -226,15 +179,14 @@ async def entrypoint(job: JobContext):
         """
         When participant attributes change, handle new translation requests.
         """
+        # Handle translation language changes
         lang = changed_attributes.get("captions_language", None)
-        if lang and lang != LanguageCode.en.name and lang not in translators:
+        if lang and lang != "en" and lang not in translators:
             try:
-                # Create a translator for the requested language
                 target_language = LanguageCode[lang].value
                 logger.info(f"Creating new translator for language: {target_language}")
                 translator = Translator(job.room, LanguageCode[lang])
                 translators[lang] = translator
-                # Remove the task creation since we don't need to pass track
                 logger.info(f"Added translator for language: {target_language}")
             except KeyError:
                 logger.warning(f"Unsupported language requested: {lang}")
@@ -244,18 +196,16 @@ async def entrypoint(job: JobContext):
     @job.room.on("participant_joined")
     def on_participant_joined(participant: rtc.Participant):
         """
-        When a participant joins, check their initial attributes for caption language.
-        Only create a translator if one doesn't already exist for the language.
+        When a participant joins, check their initial attributes.
         """
-        lang = participant.metadata.get("captions_language", "ru")  # Default to Russian as per client
-        # Only create translator if it doesn't already exist and it's not English
-        if lang != LanguageCode.en.name and lang not in translators:
+        # Handle initial translation language
+        lang = participant.metadata.get("captions_language", "ru")
+        if lang != "en" and lang not in translators:
             try:
                 target_language = LanguageCode[lang].value
                 logger.info(f"Creating new translator for initial language: {target_language}")
                 translator = Translator(job.room, LanguageCode[lang])
                 translators[lang] = translator
-                # Remove the task creation since we don't need to pass track
                 logger.info(f"Added translator for initial language: {target_language}")
             except KeyError:
                 logger.warning(f"Unsupported initial language: {lang}")
@@ -280,6 +230,6 @@ async def request_fnc(req: JobRequest):
 if __name__ == "__main__":
     cli.run_app(
         WorkerOptions(
-            entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, request_fnc=request_fnc
+            entrypoint_fnc=entrypoint, request_fnc=request_fnc
         )
     )

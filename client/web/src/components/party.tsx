@@ -3,7 +3,6 @@
 import {
   useRoomContext,
   useParticipants,
-  RoomAudioRenderer,
 } from "@livekit/components-react";
 import { Participant } from "livekit-client";
 import { Headphones, Music } from "react-feather";
@@ -27,7 +26,7 @@ export default function Party() {
   const [host, setHost] = useState<Participant | undefined>();
   const room = useRoomContext();
   const participants = useParticipants();
-  const { state } = usePartyState();
+  const { } = usePartyState();
 
   useEffect(() => {
     const host = participants.find((p) => {

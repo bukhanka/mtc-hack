@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1/text-to-speech";
-const ELEVENLABS_WS_URL = "wss://api.elevenlabs.io/v1/text-to-speech";
 
 // Simple in-memory request deduplication cache
 const requestCache = new Map<string, { timestamp: number, promise: Promise<Response> }>();
