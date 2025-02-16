@@ -75,7 +75,7 @@ export default function AccessibilityControls() {
             <Label className="text-sm text-neutral-200">{translations.highContrast}</Label>
             <Switch
               checked={state.highContrastMode}
-              onCheckedChange={(checked) =>
+              onCheckedChange={(checked: boolean) =>
                 dispatch({ type: "SET_HIGH_CONTRAST_MODE", payload: checked })
               }
               className="data-[state=checked]:bg-white"
