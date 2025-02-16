@@ -12,6 +12,8 @@ export type State = {
   ttsVoiceId: string;
   sttProvider: string;
   inputLanguage: string;
+  textSize: 'small' | 'medium' | 'large';
+  highContrastMode: boolean;
 };
 
 // Initial state with Russian as default
@@ -25,6 +27,8 @@ export const initialState: State = {
   ttsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || "Png1rsLPwah87cs3JX7l", // Voice ID from env
   sttProvider: "deepgram",
   inputLanguage: "en",
+  textSize: 'medium',
+  highContrastMode: false,
 };
 
 // Action type
@@ -38,7 +42,9 @@ export type Action =
   | { type: "SET_TTS_ENABLED"; payload: boolean }
   | { type: "SET_TTS_VOICE_ID"; payload: string }
   | { type: "SET_STT_PROVIDER"; payload: string }
-  | { type: "SET_INPUT_LANGUAGE"; payload: string };
+  | { type: "SET_INPUT_LANGUAGE"; payload: string }
+  | { type: "SET_TEXT_SIZE"; payload: 'small' | 'medium' | 'large' }
+  | { type: "SET_HIGH_CONTRAST_MODE"; payload: boolean };
 
 // Reducer function
 export const reducer = (state: State, action: Action): State => {
@@ -63,6 +69,10 @@ export const reducer = (state: State, action: Action): State => {
       return { ...state, sttProvider: action.payload };
     case "SET_INPUT_LANGUAGE":
       return { ...state, inputLanguage: action.payload };
+    case "SET_TEXT_SIZE":
+      return { ...state, textSize: action.payload };
+    case "SET_HIGH_CONTRAST_MODE":
+      return { ...state, highContrastMode: action.payload };
     default:
       throw new Error(`Unknown action: ${JSON.stringify(action)}`);
   }

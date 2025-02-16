@@ -27,6 +27,8 @@ const initialState: State = {
   ttsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || "Png1rsLPwah87cs3JX7l",
   sttProvider: "gpt-4o",
   inputLanguage: "en",
+  textSize: 'medium',
+  highContrastMode: false,
 };
 
 // PartyPage component
