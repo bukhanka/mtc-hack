@@ -4,6 +4,7 @@ import MicToggle from "@/components/controls/mic-toggle";
 import LeaveButton from "@/components/controls/leave-button";
 import CaptionsToggle from "@/components/controls/captions-toggle";
 import LanguageSelect from "@/components/controls/language-select";
+import InputLanguageSelect from "@/components/controls/input-language-select";
 import DeviceSelector from "@/components/controls/device-selector";
 import { motion } from "framer-motion";
 
@@ -48,13 +49,22 @@ export default function HostControls() {
         custom={2}
         className="min-w-[180px]"
       >
-        <LanguageSelect />
+        <InputLanguageSelect />
       </motion.div>
       <motion.div
         variants={controlsAnimation}
         initial="initial"
         animate="animate"
         custom={3}
+        className="min-w-[180px]"
+      >
+        <LanguageSelect />
+      </motion.div>
+      <motion.div
+        variants={controlsAnimation}
+        initial="initial"
+        animate="animate"
+        custom={4}
       >
         <LeaveButton />
       </motion.div>
